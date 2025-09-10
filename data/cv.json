@@ -1,0 +1,23 @@
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "phone": "+123456789",
+  "summary": "Experienced data scientist...",
+  "skills": "Python, ML, SQL",
+  "education": [
+    {
+      "school": "XYZ University",
+      "start": "2018-01-01",
+      "end": "2021-01-01",
+      "desc": "BSc Computer Science"
+    }
+  ],
+  "experience": [
+    {
+      "company": "ABC Corp",
+      "start": "2021-02-01",
+      "end": "2023-02-01",
+      "desc": "Data analyst role"
+    }
+  ]
+}
