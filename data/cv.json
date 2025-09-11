@@ -2,22 +2,34 @@
   "name": "Jane Doe",
   "email": "jane@example.com",
   "phone": "+123456789",
-  "summary": "Experienced data scientist...",
-  "skills": "Python, ML, SQL",
+  "summary": "Experienced data scientist with a strong background in statistical modeling and data visualization. Passionate about turning complex datasets into actionable insights.",
+  "skills": "Python, Machine Learning, SQL, Data Visualization, Pandas, Scikit-learn",
   "education": [
     {
       "school": "XYZ University",
-      "start": "2018-01-01",
-      "end": "2021-01-01",
-      "desc": "BSc Computer Science"
+      "start": "2017-09-01",
+      "end": "2020-06-30",
+      "desc": "BSc in Computer Science with focus on Data Science"
+    },
+    {
+      "school": "ABC Institute of Technology",
+      "start": "2020-09-01",
+      "end": "2022-06-30",
+      "desc": "MSc in Artificial Intelligence"
     }
   ],
   "experience": [
     {
-      "company": "ABC Corp",
-      "start": "2021-02-01",
-      "end": "2023-02-01",
-      "desc": "Data analyst role"
+      "company": "DataWorks Ltd",
+      "start": "2020-07-01",
+      "end": "2021-12-31",
+      "desc": "Junior Data Scientist - built predictive models and automated ETL pipelines."
+    },
+    {
+      "company": "Insight Analytics",
+      "start": "2022-01-01",
+      "end": "2023-12-31",
+      "desc": "Data Scientist - led a project on customer churn prediction using machine learning, improved accuracy by 15%."
     }
   ]
 }
