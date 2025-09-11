@@ -2,82 +2,11 @@ import streamlit as st
 from datetime import date
 from core.storage import save_cv_to_file, load_from_file
 from datetime import datetime
+from core.llm_tasks import get_llm, AnalyzerRecommender, Generator
 
 # --- Page config ---
 st.set_page_config(page_title="Help me apply", layout="wide")
 
-# --- Translations ---
-
-translations = {
-    "en": {
-        "language": "Language",
-        "title": "CV Matcher and Generator",
-        "personal_info": "1. Personal Information",
-        "name": "Full Name",
-        "email": "Email",
-        "phone": "Phone Number",
-        "profile_summary": "2. Profile Summary",
-        "summary_placeholder": "Write a short summary about yourself",
-        "education": "3. Education",
-        "education_placeholder": "List your education (school, degree, year, etc.)",
-        "experience": "4. Work Experience",
-        "experience_placeholder": "List your relevant work experience",
-        "skills": "5. Skills",
-        "skills_placeholder": "List your skills (comma-separated)",
-        "job_offer": "Job Offer",
-        "job_offer_placeholder": "Paste the job offer text here",
-        "analyze_button": "Analyze CV",
-        "generate_button": "Generate CV",
-        "validate_cv": "Validate CV Info",
-        "validate_job": "Validate Job Offer",
-        "download_cv": "Download CV",
-        "cv_generated": "✅ CV generated successfully!",
-        "add_entry": "Add Entry",
-        "school": "School Name",
-        "company": "Company Name",
-        "start_date": "Start Date",
-        "end_date": "End Date",
-        "description": "Description",
-        "analysis_title": "CV Analysis & Recommendations",
-        "back_to_cv": "← Modify CV Information",
-        "back_to_job": "← Modify Job Offer",
-        "redo_analysis": "🔄 Redo Analysis",
-    },
-    "fr": {
-        "language": "Langue",
-        "title": "Comparateur et Générateur de CV",
-        "personal_info": "1. Informations personnelles",
-        "name": "Nom complet",
-        "email": "Email",
-        "phone": "Numéro de téléphone",
-        "profile_summary": "2. Résumé du profil",
-        "summary_placeholder": "Écrivez un bref résumé de vous-même",
-        "education": "3. Formation",
-        "education_placeholder": "Indiquez votre formation (école, diplôme, année, etc.)",
-        "experience": "4. Expérience professionnelle",
-        "experience_placeholder": "Indiquez votre expérience professionnelle pertinente",
-        "skills": "5. Compétences",
-        "skills_placeholder": "Listez vos compétences (séparées par des virgules)",
-        "job_offer": "Offre d'emploi",
-        "job_offer_placeholder": "Collez ici le texte de l'offre d'emploi",
-        "analyze_button": "Analyser le CV",
-        "generate_button": "Générer le CV",
-        "validate_cv": "Valider les infos CV",
-        "validate_job": "Valider l'offre d'emploi",
-        "download_cv": "Télécharger le CV",
-        "cv_generated": "✅ CV généré avec succès !",
-        "add_entry": "Ajouter une entrée",
-        "school": "Nom de l'école",
-        "company": "Nom de l'entreprise",
-        "start_date": "Date de début",
-        "end_date": "Date de fin",
-        "description": "Description",
-        "analysis_title": "Analyse du CV & Recommandations",
-        "back_to_cv": "← Modifier les infos CV",
-        "back_to_job": "← Modifier l'offre d'emploi",
-        "redo_analysis": "🔄 Refaire l'analyse",
-    }
-}
 
 # --- Init session state ---
 if "step" not in st.session_state:
@@ -89,6 +18,12 @@ if "experience_entries" not in st.session_state:
 
 # --- Sidebar: Language & Saved CV Management ---
 lang_code = st.sidebar.selectbox("Language / Langue", ["en", "fr"])
+
+# Load LLM once
+llm = get_llm(language=lang_code, model="gemma3:4b")
+
+analyzer = AnalyzerRecommender(llm)
+generator = Generator(llm)
 
 translations_filename = "translations.json"
 translations = load_from_file(translations_filename)
@@ -188,6 +123,9 @@ def _load_saved_cv_into_session(saved):
 
 st.title(t["title"])
 
+cv_data = saved_data if saved_data else {}
+job_text = ""
+
 # --- STEP 1: CV Input ---
 if st.session_state.step == 1:
     st.header(t["personal_info"])
@@ -277,6 +215,8 @@ elif st.session_state.step == 2:
         st.session_state.step = 3
         st.rerun()
 
+    job_text = st.session_state.get("job_offer_text", "")
+
 # --- STEP 3: Analysis + CV Generation ---
 elif st.session_state.step == 3:
     # Navigation buttons at the top
@@ -321,8 +261,8 @@ elif st.session_state.step == 3:
             height=200
         )
         if st.button(t["analyze_button"]):
-            # Placeholder: simulate analysis result
-            st.session_state.analysis_result = "✅ You meet 80% of the required skills.\n🔧 Consider adding more experience in cloud technologies."
+            analysis_and_recs = analyzer.run(cv_data, job_text)
+            st.session_state.analysis_result = analysis_and_recs
             st.session_state.analysis_ready = True
             st.rerun()
 
@@ -338,8 +278,14 @@ elif st.session_state.step == 3:
     if st.session_state.get("analysis_ready"):
         st.markdown("---")  # Divider line
         if st.button(t["generate_button"]):
-            # Replace this with actual CV generation later
-            st.session_state.generated_cv = "📄 This is the generated CV content based on your input..."
+            recs = st.session_state.analysis_result
+            generated_sections = {
+                "profile": generator.rewrite_profile(cv_data.get("summary", ""), recs),
+                "skills": generator.rewrite_skills(cv_data.get("skills", ""), recs),
+                "experience": [generator.rewrite_experience(e, recs) for e in cv_data.get("experience", [])],
+                "education": [generator.rewrite_education(e, recs) for e in cv_data.get("education", [])],
+            }
+            st.session_state.generated_cv = generated_sections
             st.session_state.cv_ready = True
             st.rerun()
 
