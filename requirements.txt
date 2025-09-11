@@ -1,0 +1,13 @@
+streamlit
+
+# ---- Optional (uncomment as needed) ----
+# For DOCX generation
+# python-docx>=1.1.2
+# For templating (HTML/LaTeX CVs)
+# Jinja2>=3.1
+# For structured validation (if you add models)
+# pydantic>=2.7
+# For PDF generation from Python directly
+# reportlab>=4.0
+# Or HTML -> PDF pipeline (requires system deps)
+# weasyprint>=62.3
